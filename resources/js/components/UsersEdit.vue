@@ -13,6 +13,7 @@
         </div>
         <div class="form-group">
             <button type="submit" :disabled="saving">Update</button>
+            <button :disabled="saving" @click.prevent="onDelete($event)">Delete</button>
         </div>
     </form>
   </div>
@@ -47,13 +48,26 @@ export default {
             console.log(error)
         }).then(_ => this.saving = false); // the _ underscore variable, indicating that there’s an argument here, but we don’t need to use it
     //.then(() => this.saving = false);
-    }
+    },
+    onDelete() {
+        this.saving = true;
+
+        api.delete(this.user.id)
+           .then((response) => {
+              this.message = 'User Deleted';
+              setTimeout(() => this.$router.push({ name: 'users.index' }), 1000); //back to user list
+           });
+      }
   },
-created() {
-      api.find(this.$route.params.id).then((response) => {    //id in route parameter
-        this.loaded = true;
-        this.user = response.data.data;
-      });
+  created() {
+    api.find(this.$route.params.id)
+       .then((response) => {
+           this.loaded = true;
+           this.user = response.data.data;
+       })
+       .catch((err) => {
+         this.$router.push({ name: '404' });
+       });
   }
 };
 </script>
