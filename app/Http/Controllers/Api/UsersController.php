@@ -34,4 +34,18 @@ class UsersController extends Controller
 
 	    return response(null, 204);
 	}
+	public function store(Request $request)
+	{
+	    $data = $request->validate([
+	        'name' => 'required',
+	        'email' => 'required|unique:users',
+	        'password' => 'required|min:8',
+	    ]);
+
+	    return new UserResource(User::create([
+	        'name' => $data['name'],
+	        'email' => $data['email'],
+	        'password' => bcrypt($data['password']),
+	    ]));
+	}
 }

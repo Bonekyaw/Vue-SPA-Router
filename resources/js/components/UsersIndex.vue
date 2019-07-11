@@ -1,5 +1,8 @@
 <template>
     <div class="users">
+        <div>
+            <router-link :to="{ name: 'users.create' }">Add User</router-link>
+        </div>
         <div v-if="error" class="error">
             <p>{{ error }}</p>
         </div>
