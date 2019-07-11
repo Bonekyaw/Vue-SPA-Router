@@ -1924,13 +1924,15 @@ __webpack_require__.r(__webpack_exports__);
 
 
 var getUsers = function getUsers(page, callback) {
+  //beforeRouteEnter -> getUsers -> callback -> next -> setData
   var params = {
     page: page
-  };
+  }; // { page : 1 }
+
   axios__WEBPACK_IMPORTED_MODULE_0___default.a.get('/api/users', {
     params: params
   }).then(function (response) {
-    callback(null, response.data);
+    callback(null, response.data); //(error,data)
   })["catch"](function (error) {
     callback(error, error.response.data);
   });
@@ -1976,11 +1978,14 @@ var getUsers = function getUsers(page, callback) {
       return "".concat(current_page, " of ").concat(last_page);
     }
   },
+  // to: Route, from : Route, next : function
   beforeRouteEnter: function beforeRouteEnter(to, from, next) {
+    //fetch the data and then navigate to the new route
     getUsers(to.query.page, function (err, data) {
+      //const getUsers(page, callback)    / page=1,...
       next(function (vm) {
         return vm.setData(err, data);
-      });
+      }); //only after completion, we trigger next() and set the data on our component (the vm variable)
     });
   },
   // when route changes and this component is already rendered,
@@ -1988,16 +1993,19 @@ var getUsers = function getUsers(page, callback) {
   beforeRouteUpdate: function beforeRouteUpdate(to, from, next) {
     var _this = this;
 
-    this.users = this.links = this.meta = null;
+    this.users = this.links = this.meta = null; //should display progress bar, now
+
     getUsers(to.query.page, function (err, data) {
+      // in the request as a query string param,If it’s null (no page passed in the route), then the API will automatically assume page=1
       _this.setData(err, data);
 
-      next();
+      next(); //our component (the vm variable) is now still already rendered, no need to set data
     });
   },
   methods: {
     goToNext: function goToNext() {
       this.$router.push({
+        // to.query.page
         query: {
           page: this.nextPage
         }
@@ -2006,6 +2014,7 @@ var getUsers = function getUsers(page, callback) {
     goToPrev: function goToPrev() {
       this.$router.push({
         name: 'users.index',
+        //:to="{ name: 'users.index' }"  in order to prevent other route link before
         query: {
           page: this.prevPage
         }
@@ -2016,6 +2025,7 @@ var getUsers = function getUsers(page, callback) {
           links = _ref.links,
           meta = _ref.meta;
 
+      //vm.setData(error,data)
       if (err) {
         this.error = err.toString();
       } else {

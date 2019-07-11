@@ -20,12 +20,12 @@
 </template>
 <script>
 import axios from 'axios';
-const getUsers = (page, callback) => {
-    const params = { page };
+const getUsers = (page, callback) => {          //beforeRouteEnter -> getUsers -> callback -> next -> setData
+    const params = { page };                    // { page : 1 }
     axios
         .get('/api/users', { params })
         .then(response => {
-            callback(null, response.data);
+            callback(null, response.data);      //(error,data)
         }).catch(error => {
             callback(error, error.response.data);
         });
@@ -64,24 +64,24 @@ export default {
             const { current_page, last_page } = this.meta;
             return `${current_page} of ${last_page}`;
         },
-    },
-    beforeRouteEnter (to, from, next) {
-        getUsers(to.query.page, (err, data) => {
-            next(vm => vm.setData(err, data));
+    },                                              // to: Route, from : Route, next : function
+    beforeRouteEnter (to, from, next) {             //fetch the data and then navigate to the new route
+        getUsers(to.query.page, (err, data) => {    //const getUsers(page, callback)    / page=1,...
+            next(vm => vm.setData(err, data));      //only after completion, we trigger next() and set the data on our component (the vm variable)
         });
     },
     // when route changes and this component is already rendered,
     // the logic will be slightly different.
     beforeRouteUpdate (to, from, next) {
-        this.users = this.links = this.meta = null
-        getUsers(to.query.page, (err, data) => {
+        this.users = this.links = this.meta = null      //should display progress bar, now
+        getUsers(to.query.page, (err, data) => {        // in the request as a query string param,If it’s null (no page passed in the route), then the API will automatically assume page=1
             this.setData(err, data);
-            next();
+            next();         //our component (the vm variable) is now still already rendered, no need to set data
         });
     },
     methods: {
         goToNext() {
-            this.$router.push({
+            this.$router.push({     // to.query.page
                 query: {
                     page: this.nextPage,
                 },
@@ -89,13 +89,13 @@ export default {
         },
         goToPrev() {
             this.$router.push({
-                name: 'users.index',
+                name: 'users.index',        //:to="{ name: 'users.index' }"  in order to prevent other route link before
                 query: {
                     page: this.prevPage,
                 }
             });
         },
-        setData(err, { data: users, links, meta }) {
+        setData(err, { data: users, links, meta }) {        //vm.setData(error,data)
             if (err) {
                 this.error = err.toString();
             } else {
@@ -107,3 +107,47 @@ export default {
     }
 }
 </script>
+
+// Part 2 
+// fetchData() {
+//     this.error = this.users = null;
+//     this.loading = true;
+//     axios
+//         .get('/api/users')
+//         .then(response => {
+//             this.loading = false;
+//             this.users = response.data;
+//         }).catch(error => {
+//             this.loading = false;
+//             this.error = error.response.data.message || error.message;
+//         });
+// }
+// 
+//     {
+//    "data":[
+//       {
+//          "name":"Francis Marquardt",
+//          "email":"schamberger.adrian@example.net"
+//       },
+//       {
+//          "name":"Dr. Florine Beatty",
+//          "email":"fcummerata@example.org"
+//       },
+//       ...
+//    ],
+//    "links":{
+//       "first":"http:\/\/vue-router.test\/api\/users?page=1",        // to.query.page
+//       "last":"http:\/\/vue-router.test\/api\/users?page=5",
+//       "prev":null,
+//       "next":"http:\/\/vue-router.test\/api\/users?page=2"
+//    },
+//    "meta":{
+//       "current_page":1,
+//       "from":1,
+//       "last_page":5,
+//       "path":"http:\/\/vue-router.test\/api\/users",
+//       "per_page":10,
+//       "to":10,
+//       "total":50
+//    }
+// }
